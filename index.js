@@ -7,127 +7,109 @@ const mysql = require('mysql2');
 app.use(express.json());
 app.use(cors());
 
-
 // Define a route
 app.get('/user', (req, res) => {
-    res.send('get all data ');
-    let qr = 'select * from login_detail';
+    let qr = 'SELECT * FROM login_details';
     db.query(qr, (err, result) => {
         if (err) {
             console.log(err, 'errs');
         }
         if (result.length > 0) {
             res.send({
-                message: 'all user data',
+                message: 'YOU GOT ALL DATA',
                 data: result
             });
-        } else {
+        } 
+    });
+});
+
+// get single data
+app.get('/user/:id', (req, res)=>{
+
+    let id = req.params.id;
+    let qr = `SELECT * FROM login_details WHERE id=${id}`;
+
+    db.query(qr, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        if (result.length > 0) {
             res.send({
-                message: 'data not found'
+                message: 'You Got single data',
+                data: result
+            });
+        }
+        else{
+            res.send({
+                message:'Data Not Found'
             });
         }
     });
 });
 
-// app.post('/user', (req, res) => {
-//     console.log(req.body, 'CreateData');
-//     let email = req.body.email;
-//     let password = req.body.password;
-
-//     let qr = 'INSERT INTO login_details(email,password)values()';
-//     db.query(qr,(err,result)=>{
-//          if(err){console.log(err);
-        
-//         }
-//          if(result.length>0)
-//          {
-//             res.send({
-//                 message:'data inserted'
-//             });
-//          }else{
-//             res.send({
-//                 message:'wrong...'
-//             })
-//          }
-//     })
-// });
-
-
-//update data
-
-// app.put('/user',(req,res)=>{
-
-//     console.log(req.body,'updatedata');
-//     let id=req.params.id;
-//     let email=req.body.email;
-//     let password = req.body.password;
-
-//     let qr = 'update login_details set email="11@gmail.com", password="122223" where id =1';
-
-//     db.query(qr,(err,result)=>{
-//         if(err){
-//             console.log(err);
-//             res.send({
-//                 message:'data updated'
-//             });
-//         }
-//     })
-// });
-
-// app.post('/users', (req, res) => {
-
-//     requestBody = req.body
-//     console.log(requestBody);
-
-
-//     // let email = req.body.email;
-//     // let password = req.body.password;
-
-//     // let qr = 'insert into login_details(email,password)values('${email}','${password}')';
-//     user = {
-//         name: requestBody.fullname,
-//         contact: {
-//             phone: requestBody.mobile,
-//             email: requestBody.email
-//         },
-//         age: 26,
-//         department: "IT"
-//     } 
-
-//     res.send(user);
-// });
-
-//insert data 
-
-app.post('/user',(req,res)=>{
-    console.log(req.body,'createdata');
+//create data
+app.post('/user', (req, res) => {
+    console.log(req.body, 'createdata');
 
     let email = req.body.email;
     let password = req.body.password;
-    let qr = `insert into login_details(email,password) values ('${email}','${password}')`;
+    let qr = `INSERT INTO login_details(email,password) VALUES ('${email}','${password}')`;
 
-   db.query(qr,(err,result)=>{
-    if(err){console.log(err);
-        if(result.length>0){
-            res.send({
+    db.query(qr, (err, result) => {
+        if (err) {
+            console.log(err);
+            if (result.length > 0) {
+                res.send({
 
-message:'Data Insert' 
-            });
-        }else{
-            res.send({
-                message:'worning..'
-            })
-
-
+                    message: 'Data Insert'
+                });
+            } else {
+                res.send({
+                    message: 'Warning..'
+                })
+            }
         }
-    
-    
     }
-   }
+    )
+});
 
+//update data 
 
-   )
-            });
+app.put('/user/:id',(req,res)=>{
+    console.log(req.body,'Your Data updated');
+    
+    let id=req.params.id;
+    let email=req.body.email;
+    let password=req.body.password;
+
+    let qr=`UPDATE login_details SET email='${email}',password='${password}' WHERE id=${id}`;
+
+    db.query(qr,(err,result)=>{
+        if(err){
+            console.log(err);
+        }
+        res.send({
+            message:"DATA WAS UPDATED"
+        })
+    })
+});
+
+//delete single data
+
+app.delete('/user/:id',(req,res)=>{
+    let id = req.params.id;
+    
+    let qr = `DELETE FROM login_details WHERE id=${id}`;
+
+    db.query(qr,(err,result)=>{
+        if(err){
+            console.log(err,);
+        }
+        res.send({
+            message:'DATA RECODE WAS DELETED'
+        })
+    })
+})
 
 //database connection
 
@@ -151,33 +133,3 @@ db.connect(err => {
 app.listen(3000, () => {
     console.log('server running');
 })
-
-
-
-// const PORT = 3000;
-
-// // Create a MySQL connection
-// const db = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: '',
-//     database: 'report'
-// });
-
-// db.connect(err => {
-//     if (err) {
-//         console.error('Error connecting to MySQL:', err);
-//     } else {
-//         console.log('Connected to MySQL');
-//     }
-// });
-
-// // Define a route
-// app.get('/', (req, res) => {
-//     res.send('Hello, Node.js Backend!');
-// });
-
-// // Start the server
-// app.listen(PORT, () => {
-//     console.log(`Server is running on port ${PORT}`);
-// });
