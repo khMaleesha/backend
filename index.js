@@ -8,23 +8,87 @@ app.use(express.json());
 app.use(cors());
 
 // Define a route
-app.get('/user', (req, res) => {
-    let qr = 'SELECT * FROM login_details';
-    db.query(qr, (err, result) => {
-        if (err) {
-            console.log(err, 'errs');
+app.get('/user', async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const itemsPerPage = 5; 
+      const offset = (page - 1) * itemsPerPage;
+  
+      const countQuery = 'SELECT COUNT(*) as totalCount FROM login_details';
+      const dataQuery = 'SELECT * FROM login_details ORDER BY id LIMIT ? OFFSET ?';
+  
+      db.query(countQuery, (countErr, countResult) => {
+        if (countErr) {
+          console.error(countErr);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
         }
-        if (result.length > 0) {
-            res.send({
-                message: 'YOU GOT ALL DATA',
-                data: result
-            });
-        } 
-    });
-});
+  
+        const totalCount = countResult[0].totalCount;
+  
+        db.query(dataQuery, [itemsPerPage, offset], (dataErr, dataResult) => {
+          if (dataErr) {
+            console.error(dataErr);
+            res.status(500).json({ error: 'Internal server error' });
+            return;
+          }
+  
+          const totalPages = Math.ceil(totalCount / itemsPerPage);
+  
+          res.json({
+            data: dataResult,
+            pagination: {
+              currentPage: page,
+            totalCount: totalCount
+            }
+          });
+        });
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+//    app.get('/user', (req, res) => {
+//   const page = parseInt(req.query.page) || 1;
+//   const itemsPerPage = 10;
+//   const offset = (page - 1) * itemsPerPage;
+
+//   const countQuery = 'SELECT COUNT(*) as totalCount FROM login_details';
+//   const dataQuery = 'SELECT * FROM login_details LIMIT ? OFFSET ?';
+
+//   connection.query(countQuery, (countErr, countResults) => {
+//     if (countErr) {
+//       console.error('Error fetching total count:', countErr);
+//       res.status(500).json({ error: 'Internal server error' });
+//       return;
+//     }
+
+//     const totalCount = countResults[0].totalCount;
+
+//     connection.query(dataQuery, [itemsPerPage, offset], (dataErr, dataResults) => {
+//       if (dataErr) {
+//         console.error('Error fetching paginated data:', dataErr);
+//         res.status(500).json({ error: 'Internal server error' });
+//         return;
+//       }
+
+//       const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+//       res.json({
+//         data: dataResults,
+//         pagination: {
+//           currentPage: page,
+//           totalPages: totalPages
+//         }
+//       });
+//     });
+//   });
+// });
 
 // get single data
-app.get('/user/:id', (req, res)=>{
+app.get('/user/:id', async (req, res) => {
 
     let id = req.params.id;
     let qr = `SELECT * FROM login_details WHERE id=${id}`;
@@ -39,13 +103,109 @@ app.get('/user/:id', (req, res)=>{
                 data: result
             });
         }
-        else{
+        else {
             res.send({
-                message:'Data Not Found'
+                message: 'Data Not Found'
             });
         }
     });
 });
+//     app.get('/user', async (req, res) => {
+//         try {
+//           const id = req.params.id;
+//           const qr = `SELECT * FROM login_details WHERE id=${id}`;
+
+//           connection.query(qr, (err, result) => {
+//             if (err) {
+//               console.log(err);
+//               res.status(500).json({ message: 'Internal server error' });
+//               return;
+//             }
+//             if (result.length > 0) {
+//               res.send({
+//                 message: 'You Got single data',
+//                 data: result
+//               });
+//             } else {
+//               res.send({
+//                 message: 'Data Not Found'
+//               });
+//             }
+//           });
+
+//           const { page, limit } = req.query;
+//           const offset = (page - 1) * limit;
+//           const data = await new Promise((resolve, reject) => {
+//             connection.query(
+//               'SELECT * FROM login_details LIMIT ? OFFSET ?',
+//               [limit, offset],
+//               (err, results) => {
+//                 if (err) reject(err);
+//                 else resolve(results);
+//               }
+//             );
+//           });
+
+//           const [totalPageData] = await new Promise((resolve, reject) => {
+//             connection.query('SELECT COUNT(*) as count FROM login_details', (err, results) => {
+//               if (err) reject(err);
+//               else resolve(results);
+//             });
+//           });
+
+//           const totalPage = Math.ceil(+totalPageData[0]?.count / limit);
+
+//           res.json({
+//             data: data,
+//             pagination: {
+//               page: +page,
+//               limit: +limit,
+//               totalPage
+//             }
+//           });
+//         } catch (error) {
+//           console.log(error);
+//           res.status(500).json({ message: 'Internal server error' });
+//         }
+//       });
+// });
+
+// app.get('/user', (req, res) => {
+//     const page = parseInt(req.query.page) || 1;
+//     const itemsPerPage = 10;
+//     const offset = (page - 1) * itemsPerPage;
+
+//     const countQuery = 'SELECT COUNT(*) as totalCount FROM login_details';
+//     const dataQuery = 'SELECT * FROM login_details LIMIT ? OFFSET ?';
+
+//     connection.query(countQuery, (countErr, countResults) => {
+//       if (countErr) {
+//         console.error('Error fetching total count:', countErr);
+//         res.status(500).json({ error: 'Internal server error' });
+//         return;
+//       }
+
+//       const totalCount = countResults[0].totalCount;
+
+//       connection.query(dataQuery, [itemsPerPage, offset], (dataErr, dataResults) => {
+//         if (dataErr) {
+//           console.error('Error fetching paginated data:', dataErr);
+//           res.status(500).json({ error: 'Internal server error' });
+//           return;
+//         }
+
+//         const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+//         res.json({
+//           data: dataResults,
+//           pagination: {
+//             currentPage: page,
+//             totalPages: totalPages
+//           }
+//         });
+//       });
+//     });
+//   });
 
 //create data
 app.post('/user', (req, res) => {
@@ -75,38 +235,38 @@ app.post('/user', (req, res) => {
 
 //update data 
 
-app.put('/user/:id',(req,res)=>{
-    console.log(req.body,'Your Data updated');
-    
-    let id=req.params.id;
-    let email=req.body.email;
-    let password=req.body.password;
+app.put('/user/:id', (req, res) => {
+    console.log(req.body, 'Your Data updated');
 
-    let qr=`UPDATE login_details SET email='${email}',password='${password}' WHERE id=${id}`;
+    let id = req.params.id;
+    let email = req.body.email;
+    let password = req.body.password;
 
-    db.query(qr,(err,result)=>{
-        if(err){
+    let qr = `UPDATE login_details SET email='${email}',password='${password}' WHERE id=${id}`;
+
+    db.query(qr, (err, result) => {
+        if (err) {
             console.log(err);
         }
         res.send({
-            message:"DATA WAS UPDATED"
+            message: "DATA WAS UPDATED"
         })
     })
 });
 
 //delete single data
 
-app.delete('/user/:id',(req,res)=>{
+app.delete('/user/:id', (req, res) => {
     let id = req.params.id;
-    
+
     let qr = `DELETE FROM login_details WHERE id=${id}`;
 
-    db.query(qr,(err,result)=>{
-        if(err){
+    db.query(qr, (err, result) => {
+        if (err) {
             console.log(err,);
         }
         res.send({
-            message:'DATA RECODE WAS DELETED'
+            message: 'DATA RECODE WAS DELETED'
         })
     })
 })
